@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udpserver
+  labels:
+    app: udpserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: udpserver
+  template:
+    metadata:
+      labels:
+        app: udpserver
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - udpserver
+            topologyKey: "kubernetes.io/hostname"
+      terminationGracePeriodSeconds: 120 
+      containers:
+      - name: udpserver
+        image: ghcr.io/n-arno/udpserver:latest
+        ports:
+        - containerPort: 1053
+          hostPort: 1053
+          protocol: UDP
+        lifecycle:
+          preStop:
+            exec:
+              command: [
+                "/bin/sh", "-c", "sleep 180"
+              ]
